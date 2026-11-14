@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="El Taxi Toscanini, empresa familiar desde 2020. Pedí un taxi o cotizá un viaje de larga distancia por WhatsApp.">
+  <title>El Taxi Toscanini</title>
+  <link rel="stylesheet" href="maplibre-gl.css">
+  <style>
+    @font-face {
+      font-family: "Archivo Black";
+      src: url("archivo-black.woff2") format("woff2");
+      font-weight: 900;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Instrument Serif";
+      src: url("instrument-serif.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: light;
+      --paper: #fff;
+      --accent: #ffd400;
+      --rule: #d2d3d5;
+      --ink: #151618;
+      --sans: "Instrument Sans", Arial, sans-serif;
+      --serif: "Instrument Serif", Georgia, serif;
+      font: 100%/1.45 var(--sans);
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    a { color: var(--ink); text-underline-offset: .2em; }
+    :focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+    main {
+      max-width: 1700px;
+      margin-inline: auto;
+      padding: clamp(24px, 2.45vw, 40px) clamp(18px, 3vw, 50px) 28px;
+      container-type: inline-size;
+    }
+
+    .masthead {
+      position: relative;
+      overflow: clip;
+      padding-bottom: clamp(14px, 1.65vw, 26px);
+      border-bottom: 2px solid var(--accent);
+      text-align: center;
+      color: var(--ink);
+    }
+
+    .wordmark {
+      margin: 0;
+      font: 900 12.15cqw/.79 "Archivo Black", "Arial Black", Arial, sans-serif;
+      letter-spacing: -.065em;
+      text-transform: uppercase;
+    }
+
+    .wordmark span {
+      display: block;
+      width: max-content;
+      margin-inline: auto;
+    }
+    .wordmark span:first-child { transform: scaleX(2.05); }
+    .wordmark span + span {
+      margin-top: .115em;
+      transform: scaleX(.78);
+    }
+
+    .masthead-note {
+      position: absolute;
+      bottom: clamp(20px, 2.15vw, 34px);
+      width: 23%;
+      margin: 0;
+      color: var(--ink);
+      line-height: 1.12;
+    }
+
+    .masthead-note.left { left: 0; }
+    .masthead-note.right { right: 0; }
+    .masthead-note span { display: block; font-size: clamp(12px, 1.05cqw, 17px); }
+    .masthead-note strong {
+      display: block;
+      margin-top: 4px;
+      font: 400 clamp(24px, 3.7cqw, 62px)/.98 var(--serif);
+      letter-spacing: -.03em;
+    }
+
+    .tagline {
+      margin: clamp(18px, 2vw, 32px) 0 clamp(12px, 1.4vw, 22px);
+      color: #45474b;
+      text-align: center;
+      font-size: clamp(14px, 1.75cqw, 28px);
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: -.025em;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-areas: "service art booking";
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2.7fr) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(12px, 1.6cqw, 26px);
+      text-align: center;
+    }
+
+    .service { grid-area: service; }
+    .booking { grid-area: booking; }
+
+    .editorial h2,
+    .contacts h2 {
+      margin: 0;
+      font: 400 clamp(36px, 4.8cqw, 78px)/.92 var(--serif);
+      color: var(--ink);
+      letter-spacing: -.035em;
+    }
+
+    .editorial p {
+      max-width: 22ch;
+      margin: .95em auto 0;
+      font-size: clamp(14px, 1.2cqw, 18px);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: .5rem 1.45rem;
+      border: 1px solid var(--accent);
+      border-radius: 100px;
+      color: var(--ink);
+      text-decoration: none;
+      background: transparent;
+    }
+
+    .pill:hover { background: #fff5c2; }
+    .booking .pill {
+      min-width: min(100%, 170px);
+      margin-top: clamp(13px, 1.6cqw, 25px);
+      font-weight: 700;
+      background: var(--accent);
+      color: var(--ink);
+    }
+    .booking .pill:hover { background: #ffe35c; }
+
+    .taxi-art {
+      grid-area: art;
+      margin: 0;
+    }
+
+    .taxi-art video {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      pointer-events: none;
+    }
+
+    .contacts {
+      margin-top: clamp(26px, 2.2vw, 36px);
+      padding-block: clamp(19px, 2vw, 32px);
+      border-block: 1px solid var(--accent);
+      scroll-margin-top: 12px;
+    }
+
+    .contacts h2 { font-size: clamp(40px, 4.35cqw, 67px); }
+
+    .contacts dl {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin: clamp(15px, 1.7vw, 26px) 0 0;
+    }
+
+    .contacts dl div { min-width: 0; padding: 2px clamp(12px, 2vw, 28px) 2px 0; }
+    .contacts dl div + div {
+      padding-left: clamp(12px, 2vw, 28px);
+      border-left: 1px solid var(--rule);
+    }
+
+    .contacts dt { font-weight: 700; }
+    .contacts dd {
+      display: grid;
+      justify-items: start;
+      gap: 10px;
+      margin: 4px 0 0;
+    }
+
+    .journey,
+    .social {
+      padding-block: clamp(54px, 8vw, 118px);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .section-title {
+      max-width: 12ch;
+      margin: 0;
+      color: var(--ink);
+      font: 400 clamp(48px, 7cqw, 110px)/.88 var(--serif);
+      letter-spacing: -.035em;
+    }
+
+    .journey-grid,
+    .social {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: clamp(30px, 6vw, 100px);
+    }
+
+    .journey p,
+    .social p {
+      max-width: 36ch;
+      margin: 1.25rem 0;
+      font-size: clamp(16px, 1.45cqw, 22px);
+    }
+
+    .journey-list {
+      margin: 0;
+      padding-left: 1.5rem;
+      color: var(--ink);
+    }
+
+    .journey-list li {
+      padding: 18px 0 18px 8px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .journey-list strong { display: block; }
+    .journey-list span { color: var(--ink); }
+
+    .social { align-items: center; }
+    .social video {
+      display: block;
+      width: min(100%, 330px);
+      height: auto;
+      margin-inline: auto;
+    }
+
+    .social-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .social-links .pill { gap: 9px; }
+    .social-links svg { color: var(--ink); }
+    .social-links .instagram-glint { fill: var(--accent); stroke: var(--ink); }
+
+    .fare { scroll-margin-top: 12px; }
+    .fare .section-title { max-width: none; }
+    .fare > p { margin-bottom: 2rem; }
+    .fare form { min-width: 0; }
+    .fare-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .fare label { display: grid; gap: 5px; font-weight: 700; }
+    .fare input, .fare select {
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 400;
+    }
+    .fare .holiday {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-block: 14px;
+      font-weight: 400;
+    }
+    .fare input[type="checkbox"] { width: 18px; min-height: auto; accent-color: var(--accent); }
+    .fare .fare-help { max-width: none; margin: 12px 0; font-size: .9rem; }
+    .fare button { font: inherit; font-weight: 700; cursor: pointer; background: var(--accent); }
+    .fare button:disabled { cursor: wait; opacity: .6; }
+    .fare-match { margin-block: 14px; }
+    .fare-map { width: 100%; height: clamp(250px, 33vw, 410px); background: #eeefed; }
+    .fare output { display: block; font-size: clamp(22px, 3vw, 38px); font-weight: 700; }
+    .fare-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+    .site-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 22px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      html { scroll-behavior: smooth; }
+    }
+
+    @media (max-width: 700px) {
+      main { padding-inline: clamp(14px, 5vw, 30px); }
+      .wordmark { font-size: 13.9cqw; }
+      .wordmark span:first-child { transform: scaleX(1.76); }
+      .wordmark span + span { transform: scaleX(1.12); }
+      .masthead-note { display: none; }
+      .tagline { max-width: 28ch; margin-inline: auto; }
+      .hero {
+        grid-template-areas: "art" "booking" "service";
+        grid-template-columns: minmax(0, 1fr);
+        gap: 15px;
+      }
+      .taxi-art { margin-inline: -10px; }
+      .editorial h2 { font-size: 44px; }
+      .editorial h2 br { display: none; }
+      .service {
+        margin-top: 12px;
+        padding-top: 15px;
+        border-top: 1px solid var(--rule);
+      }
+      .service h2 { font-size: 36px; }
+      .service p { max-width: 29ch; margin-top: .5em; }
+      .contacts dl { grid-template-columns: 1fr; gap: 16px; }
+      .contacts dl div + div { padding: 16px 0 0; border: 0; border-top: 1px solid var(--rule); }
+      .journey-grid, .social { grid-template-columns: 1fr; }
+      .social video { width: min(100%, 290px); }
+    }
+
+  </style>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <h1 class="wordmark" aria-label="El Taxi Toscanini">
+        <span>El Taxi</span>
+        <span>Toscanini</span>
+      </h1>
+      <p class="masthead-note left"><span>Servicio</span><strong>Traslados</strong></p>
+      <p class="masthead-note right"><span>Reservas</span><strong>Por WhatsApp</strong></p>
+    </header>
+
+    <p class="tagline">Buen trato en cada viaje</p>
+
+    <section class="hero" aria-label="Servicio de taxi">
+      <figure class="taxi-art">
+        <video src="taxi-integrado.mp4" poster="taxi-integrado.png" width="1280" height="720" muted loop playsinline preload="auto"
+          aria-label="Ilustración del taxi blanco con matrícula 1260"></video>
+      </figure>
+
+      <div class="editorial booking">
+        <h2>¿Precisás<br> un taxi?</h2>
+        <a class="pill" href="#contacto">Pedí tu taxi</a>
+      </div>
+
+      <div class="editorial service">
+        <h2>Buen<br> servicio</h2>
+        <p>Viajá con tranquilidad y atención cordial.</p>
+      </div>
+    </section>
+
+    <section class="journey" aria-labelledby="viaje-titulo">
+      <div class="journey-grid">
+        <div>
+          <h2 class="section-title" id="viaje-titulo">Tu próximo viaje</h2>
+          <p>Para ir al trabajo, hacer un mandado o volver a casa, coordiná tu traslado por WhatsApp.</p>
+          <a class="pill" href="#contacto">Ver taxis</a>
+          <a class="pill" href="#precio">Estimar precio</a>
+        </div>
+        <ol class="journey-list">
+          <li><strong>Elegí un taxi</strong><span>Su botón abre WhatsApp con un mensaje listo para completar.</span></li>
+          <li><strong>Decinos dónde estás</strong><span>Agregá la dirección de salida y tu destino.</span></li>
+          <li><strong>Coordiná la recogida</strong><span>Confirmá por chat cuándo y dónde encontrarnos.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="journey journey-grid">
+      <section aria-labelledby="nosotros-titulo">
+        <h2 class="section-title" id="nosotros-titulo">Quiénes somos</h2>
+        <p>Somos una empresa familiar que nació en 2020, durante la pandemia. Hoy contamos con tres taxis y seguimos atendiendo cada viaje con el trato cercano de siempre.</p>
+      </section>
+      <section aria-labelledby="cotizacion-titulo">
+        <h2 class="section-title" id="cotizacion-titulo">Viajes de larga distancia</h2>
+        <p>Contanos desde dónde salís, adónde vas y cuándo querés viajar para pedir una cotización.</p>
+        <a class="pill" href="https://wa.me/59897466810?text=Hola%2C%20%C2%BFc%C3%B3mo%20est%C3%A1s%3F%20Quiero%20cotizar%20un%20viaje%20desde%20%5Borigen%5D%20hasta%20%5Bdestino%5D%20para%20el%20%5Bd%C3%ADa%5D%20a%20las%20%5Bhora%5D.%20%C2%BFMe%20pas%C3%A1s%20el%20precio%3F">Cotizar ahora</a>
+        <p><strong>De la Terminal de Paysandú a la Terminal de Colón</strong></p>
+        <a class="pill" href="https://wa.me/59897466810?text=Hola%2C%20%C2%BFc%C3%B3mo%20est%C3%A1s%3F%20Quiero%20cotizar%20un%20viaje%20desde%20la%20Terminal%20de%20Paysand%C3%BA%20hasta%20la%20Terminal%20de%20Col%C3%B3n%20para%20el%20%5Bd%C3%ADa%5D%20a%20las%20%5Bhora%5D.%20%C2%BFMe%20pas%C3%A1s%20el%20precio%3F">Consultar precio Paysandú–Colón</a>
+      </section>
+    </div>
+
+    <section class="fare journey" id="precio" aria-labelledby="precio-titulo">
+      <h2 class="section-title" id="precio-titulo">Precio aproximado</h2>
+      <p>Calculá un estimado para un viaje dentro de la ciudad de Paysandú.</p>
+      <div class="journey-grid">
+        <form id="fare-form">
+          <div class="fare-fields">
+            <label>Dirección de salida
+              <input name="origin" required maxlength="160" placeholder="Ej. Plaza Constitución, Paysandú">
+            </label>
+            <label>Dirección de destino
+              <input name="destination" required maxlength="160" placeholder="Ej. Terminal Shopping, Paysandú">
+            </label>
+            <label>Fecha del viaje <input name="date" type="date" required></label>
+            <label>Hora de salida <input name="start" type="time" required></label>
+            <label>Hora de llegada (opcional) <input name="end" type="time"></label>
+          </div>
+          <label class="holiday"><input name="holiday" type="checkbox"> La fecha es feriado</label>
+          <p class="fare-help">Horas de Uruguay. Incluí la ciudad y el número de puerta si lo tenés.</p>
+          <button class="pill" id="fare-submit" type="submit">Buscar direcciones</button>
+          <div id="fare-matches" hidden>
+            <label class="fare-match">Confirmá la salida <select id="fare-origin" required disabled></select></label>
+            <label class="fare-match">Confirmá el destino <select id="fare-destination" required disabled></select></label>
+            <button class="pill" id="fare-route" type="button">Ver recorrido y estimar</button>
+          </div>
+        </form>
+        <div>
+          <div class="fare-map" id="fare-map" aria-label="Mapa del recorrido" hidden></div>
+          <p class="fare-help" id="fare-status" role="status">Ingresá las direcciones para ver el recorrido.</p>
+          <output id="fare-total" form="fare-form" hidden></output>
+          <p class="fare-help" id="fare-detail" hidden></p>
+          <div class="fare-links">
+            <a class="pill" id="fare-google" target="_blank" rel="noopener" hidden>Ver en Google Maps</a>
+            <a class="pill" id="fare-quote" hidden>Confirmar por WhatsApp</a>
+          </div>
+        </div>
+      </div>
+      <p class="fare-help">Referencia local de julio de 2026. De día, $119 de bajada y $63/km. De noche, $143 de bajada y $68/km. La tarifa nocturna se aplica de 22:00 a 06:00 y todo el día los domingos y feriados. El estimado toma la hora de salida y excluye esperas y peajes. <a href="https://www.eltelegrafo.com/2026/07/la-tarifa-de-taxis-subio-655-en-paysandu/">Ver fuente de la tarifa</a>.</p>
+    </section>
+
+    <section class="contacts" id="contacto" aria-labelledby="contacto-titulo" tabindex="-1">
+      <h2 id="contacto-titulo">Pedí tu taxi por WhatsApp</h2>
+      <dl>
+        <div>
+          <dt>Taxi 1260</dt>
+          <dd>
+            <span>+598 97 466 810</span>
+            <a class="pill" href="https://wa.me/59897466810?text=Hola%2C%20%C2%BFc%C3%B3mo%20est%C3%A1s%3F%20Quer%C3%ADa%20pedir%20un%20taxi."
+              aria-label="Escribir por WhatsApp al taxi 1260">WhatsApp</a>
+          </dd>
+        </div>
+        <div>
+          <dt>Taxi 1327</dt>
+          <dd>
+            <span>+598 96 130 042</span>
+            <a class="pill" href="https://wa.me/59896130042?text=Hola%2C%20%C2%BFc%C3%B3mo%20est%C3%A1s%3F%20Quer%C3%ADa%20pedir%20un%20taxi."
+              aria-label="Escribir por WhatsApp al taxi 1327">WhatsApp</a>
+          </dd>
+        </div>
+        <div>
+          <dt>Taxi 1352</dt>
+          <dd>
+            <span>+598 92 405 624</span>
+            <a class="pill" href="https://wa.me/59892405624?text=Hola%2C%20%C2%BFc%C3%B3mo%20est%C3%A1s%3F%20Quer%C3%ADa%20pedir%20un%20taxi."
+              aria-label="Escribir por WhatsApp al taxi 1352">WhatsApp</a>
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="social" aria-labelledby="redes-titulo">
+      <div>
+        <h2 class="section-title" id="redes-titulo">El taxi en redes</h2>
+        <p>Un video corto de El Taxi Toscanini, listo para compartir como Reel o TikTok.</p>
+        <a class="pill" href="toscanini-redes.mp4" download>Descargar video</a>
+        <div class="social-links">
+          <a class="pill" data-social="instagram" hidden>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle class="instagram-glint" cx="17.5" cy="6.7" r="1.1" stroke-width=".75"/>
+            </svg>
+            Instagram
+          </a>
+          <a class="pill" data-social="tiktok" hidden>TikTok</a>
+        </div>
+      </div>
+      <video src="toscanini-redes.mp4" poster="toscanini-redes.jpg" width="1080" height="1920"
+        controls playsinline preload="none" aria-label="Video de El Taxi Toscanini para redes"></video>
+    </section>
+
+    <footer class="site-footer">
+      <strong>El Taxi Toscanini</strong>
+      <a href="#contacto">Pedí tu taxi</a>
+    </footer>
+  </main>
+
+  <script src="contactos.js"></script>
+  <script src="maplibre-gl.js"></script>
+  <script src="precio.js"></script>
+  <script>
+    document.querySelectorAll('[data-social]').forEach((link) => {
+      const profile = window.redesTaxi?.[link.dataset.social]?.trim();
+      const host = link.dataset.social === 'instagram' ? 'instagram.com' : 'tiktok.com';
+      const url = profile && URL.canParse(profile) ? new URL(profile) : null;
+      if (!url || url.protocol !== 'https:' || url.hostname.replace(/^www\./, '') !== host) return;
+      link.href = url.href;
+      link.hidden = false;
+    });
+
+    const video = document.querySelector('.taxi-art video');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+    function syncTaxiPlayback() {
+      if (reducedMotion.matches) video.pause();
+      else video.play().catch(() => {});
+    }
+
+    reducedMotion.addEventListener('change', syncTaxiPlayback);
+    syncTaxiPlayback();
+  </script>
+</body>
+</html>
